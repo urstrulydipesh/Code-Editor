@@ -1,42 +1,32 @@
-<h1 align="center">✨ SaaS Code Editor - Next.js 15 ✨</h1>
+# Code Craft - Online Code Editor 💻
 
-![Demo App](/public/screenshot-for-readme.png)
+A personal project - Write, run, and share code directly from your browser!
 
-[Watch Full Tutorial on Youtube](https://youtu.be/fGkRQgf6Scw)
+## What is Code Craft?
 
-Highlights:
+Code Craft is an online code editor where you can:
+- Write code in 10+ different programming languages
+- Run your code instantly and see results
+- Save your code as snippets
+- Share your code with others
+- Track your coding history
 
-- 🚀 Tech stack: Next.js 15 + Convex + Clerk + TypeScript
-- 💻 Online IDE with multi-language support (10 languages)
-- 🎨 Customizable experience with 5 VSCode themes
-- ✨ Smart output handling with Success & Error states
-- 💎 Flexible pricing with Free & Pro plans
-- 🤝 Community-driven code sharing system
-- 🔍 Advanced filtering & search capabilities
-- 👤 Personal profile with execution history tracking
-- 📊 Comprehensive statistics dashboard
-- ⚙️ Customizable font size controls
-- 🔗 Webhook integration support
-- 🌟 Professional deployment walkthrough
+## Features 🌟
 
-### Setup .env file
+- **Multi-Language Support** - Write in Python, JavaScript, Java, C++, and more
+- **Live Code Execution** - Run your code and see results instantly
+- **Multiple Themes** - Choose from 5 different VSCode themes to match your style
+- **Code Sharing** - Share your snippets with the community
+- **Personal Profile** - Keep track of all your code snippets and execution history
+- **Free & Pro Plans** - Start free and upgrade for advanced features
 
-```js
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-CONVEX_DEPLOYMENT=
-NEXT_PUBLIC_CONVEX_URL=
-```
+## Tech Stack 🛠️
 
-### Add these env to Convex Dashboard
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
+- **Backend**: Convex
+- **Authentication**: Clerk
+- **Database**: Convex DB
 
-```js
-CLERK_WEBHOOK_SECRET=
-LEMON_SQUEEZY_WEBHOOK_SECRET=
-```
+---
 
-### Run the app
-
-```shell
-npm run dev
-```
+*Crafted by Dipesh Sah*

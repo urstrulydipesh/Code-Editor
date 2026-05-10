@@ -1,3 +1,5 @@
+"use client";
+
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { Id } from "../../../../../convex/_generated/dataModel";
 import { useState } from "react";
@@ -22,9 +24,11 @@ function Comments({ snippetId }: { snippetId: Id<"snippets"> }) {
 
     try {
       await addComment({ snippetId, content });
+      toast.success("Comment added!");
     } catch (error) {
       console.log("Error adding comment:", error);
-      toast.error("Something went wrong");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add comment";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

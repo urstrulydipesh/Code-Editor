@@ -3,12 +3,34 @@
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
 
 function RunButton() {
   const { runCode, isRunning } = useCodeEditorStore();
+  const saveExecution = useMutation(api.codeExecutions.saveExecution);
+  const { isLoaded } = useUser();
 
   const handleRun = async () => {
     await runCode();
+    
+    // Get the updated state from the store after code execution
+    const { executionResult, language, getCode } = useCodeEditorStore.getState();
+    
+    // Save execution to database after code runs
+    if (isLoaded && executionResult) {
+      try {
+        await saveExecution({
+          language,
+          code: getCode(),
+          output: executionResult.output || undefined,
+          error: executionResult.error || undefined,
+        });
+      } catch (error) {
+        console.error("Failed to save execution:", error);
+      }
+    }
   };
 
   return (

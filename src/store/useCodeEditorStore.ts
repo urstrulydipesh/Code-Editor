@@ -100,57 +100,109 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
           return;
         }
 
+        const requestBody = {
+          language_id: parseInt(language_id.toString()),
+          source_code: btoa(code), // Convert to base64
+          stdin: "",
+        };
+
+        console.log("Sending to Judge0:", requestBody);
+
         const response = await fetch(
-          "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+          "https://ce.judge0.com/submissions?base64_encoded=true&wait=true",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "Accept": "application/json",
             },
-            body: JSON.stringify({
-              language_id,
-              source_code: code,
-            }),
+            body: JSON.stringify(requestBody),
           }
         );
 
-        const data = await response.json();
+        console.log("Judge0 status:", response.status);
+        console.log("Judge0 headers:", {
+          contentType: response.headers.get("content-type"),
+          contentLength: response.headers.get("content-length"),
+        });
+
+        let data;
+        const text = await response.text();
+        console.log("Judge0 raw response:", text);
+
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("Failed to parse Judge0 response:", parseError);
+          throw new Error(`Judge0 returned invalid JSON: ${text}`);
+        }
 
         console.log("Judge0 response:", data);
 
-        if (data.stderr) {
+        // Handle error responses
+        if (!response.ok || response.status !== 200) {
+          const errorMsg = data.message || data.error || `HTTP ${response.status}: ${text.slice(0, 200)}`;
+          console.error("Judge0 Error Response:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorMsg,
+            data: data
+          });
           set({
-            error: data.stderr,
-            executionResult: { code, output: "", error: data.stderr },
+            error: `Code execution failed: ${errorMsg}`,
+            executionResult: { code, output: "", error: errorMsg },
           });
           return;
         }
 
-        if (data.compile_output) {
+        // Decode base64 fields from Judge0 response
+        const decodeBase64 = (str: string | null | undefined) => {
+          if (!str) return "";
+          try {
+            return atob(str);
+          } catch (e) {
+            return str;
+          }
+        };
+
+        const decodedStdout = decodeBase64(data.stdout);
+        const decodedStderr = decodeBase64(data.stderr);
+        const decodedCompileOutput = decodeBase64(data.compile_output);
+
+        console.log("Decoded output:", { decodedStdout, decodedStderr, decodedCompileOutput });
+
+        if (decodedStderr) {
           set({
-            error: data.compile_output,
-            executionResult: { code, output: "", error: data.compile_output },
+            error: decodedStderr,
+            executionResult: { code, output: "", error: decodedStderr },
           });
           return;
         }
 
-        const output = data.stdout || "";
+        if (decodedCompileOutput) {
+          set({
+            error: decodedCompileOutput,
+            executionResult: { code, output: "", error: decodedCompileOutput },
+          });
+          return;
+        }
 
         set({
-          output: output.trim(),
+          output: decodedStdout.trim(),
           error: null,
           executionResult: {
             code,
-            output: output.trim(),
+            output: decodedStdout.trim(),
             error: null,
           },
         });
 
       } catch (error) {
-        console.log("Error running code:", error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error("Exception running code:", errorMsg, error);
         set({
-          error: "Error running code",
-          executionResult: { code, output: "", error: "Error running code" },
+          error: `Error: ${errorMsg}`,
+          executionResult: { code, output: "", error: errorMsg },
         });
       } finally {
         set({ isRunning: false });

@@ -1,8 +1,8 @@
 "use client";
 import { useUser } from "@clerk/nextjs";
-import { usePaginatedQuery, useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../../convex/_generated/api";
 import NavigationHeader from "@/components/NavigationHeader";
 import ProfileHeader from "./_components/ProfileHeader";
@@ -31,6 +31,7 @@ function ProfilePage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"executions" | "starred">("executions");
+  const ensureUserExists = useMutation(api.users.ensureUserExists);
 
   const userStats = useQuery(api.codeExecutions.getUserStats, {
     userId: user?.id ?? "",
@@ -52,6 +53,17 @@ function ProfilePage() {
   );
 
   const userData = useQuery(api.users.getUser, { userId: user?.id ?? "" });
+
+  // Ensure user exists in database when component mounts or user changes
+  useEffect(() => {
+    if (user && isLoaded && !userData) {
+      ensureUserExists({
+        userId: user.id,
+        email: user.emailAddresses[0]?.emailAddress || "",
+        name: user.fullName || "User",
+      }).catch((error) => console.error("Failed to ensure user exists:", error));
+    }
+  }, [user?.id, isLoaded, userData, ensureUserExists]);
 
   const handleLoadMore = () => {
     if (executionStatus === "CanLoadMore") loadMore(5);

@@ -42,6 +42,36 @@ export const getUser = query({
   },
 });
 
+export const ensureUserExists = mutation({
+  args: {
+    userId: v.string(),
+    email: v.string(),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (!args.userId) throw new Error("User ID is required");
+
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_user_id")
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .first();
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const userId = await ctx.db.insert("users", {
+      userId: args.userId,
+      email: args.email,
+      name: args.name,
+      isPro: false,
+    });
+
+    return await ctx.db.get(userId);
+  },
+});
+
 export const upgradeToPro = mutation({
   args: {
     email: v.string(),

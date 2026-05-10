@@ -11,17 +11,26 @@ export const createSnippet = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const user = await ctx.db
+    let user = await ctx.db
       .query("users")
       .withIndex("by_user_id")
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .first();
 
-    if (!user) throw new Error("User not found");
+    // If user doesn't exist, create them (fallback for webhook failures)
+    if (!user) {
+      const userId = await ctx.db.insert("users", {
+        userId: identity.subject,
+        email: identity.email || "",
+        name: identity.name || "Anonymous",
+        isPro: false,
+      });
+      user = await ctx.db.get(userId);
+    }
 
     const snippetId = await ctx.db.insert("snippets", {
       userId: identity.subject,
-      userName: user.name,
+      userName: user!.name,
       title: args.title,
       language: args.language,
       code: args.code,
@@ -108,18 +117,27 @@ export const addComment = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const user = await ctx.db
+    let user = await ctx.db
       .query("users")
       .withIndex("by_user_id")
       .filter((q) => q.eq(q.field("userId"), identity.subject))
       .first();
 
-    if (!user) throw new Error("User not found");
+    // If user doesn't exist, create them (fallback for webhook failures)
+    if (!user) {
+      const userId = await ctx.db.insert("users", {
+        userId: identity.subject,
+        email: identity.email || "",
+        name: identity.name || "Anonymous",
+        isPro: false,
+      });
+      user = await ctx.db.get(userId);
+    }
 
     return await ctx.db.insert("snippetComments", {
       snippetId: args.snippetId,
       userId: identity.subject,
-      userName: user.name,
+      userName: user!.name,
       content: args.content,
     });
   },

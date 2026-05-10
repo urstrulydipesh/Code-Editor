@@ -1,8 +1,8 @@
 export default {
   providers: [
     {
-      domain: "https://enabling-alien-47.clerk.accounts.dev/",
+      domain: "https://communal-stinkbug-44.clerk.accounts.dev",
       applicationID: "convex",
     },
-  ],
+  ]
 };
